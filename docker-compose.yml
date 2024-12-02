@@ -1,0 +1,37 @@
+
+services:
+  app:
+    build: .
+    container_name: music-lib-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: music-lib-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+  migrate:
+    image: migrate/migrate
+    container_name: music-lib-migrate
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
