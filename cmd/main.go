@@ -1,21 +1,31 @@
 package main
 
 import (
-	"net/http"
+	"log"
+	"os"
 
+	"github.com/codeboris/music-lib/internal/handlers"
+	"github.com/codeboris/music-lib/internal/repositories"
+	"github.com/codeboris/music-lib/internal/services"
+	"github.com/codeboris/music-lib/pkg/db"
 	"github.com/codeboris/music-lib/pkg/server"
-	"github.com/sirupsen/logrus"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	logrus.SetFormatter(new(logrus.JSONFormatter))
-	logrus.Infoln("App logrus view.")
+	databaseURL := os.Getenv("DATABASE_URL")
+	port := os.Getenv("APP_PORT")
+	dbConn, err := db.Connect(databaseURL)
+	if err != nil {
+		log.Fatalf("Ошибка подключения к БД: %v", err)
+	}
+
+	repo := repositories.NewSongRepository(dbConn)
+	service := services.NewService(repo)
+	handler := handlers.NewHandler(service)
 
 	srv := new(server.Server)
-	srv.Run("8000", http.HandlerFunc(startString))
-}
-
-func startString(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Добро пожаловать на апи!"))
+	if err := srv.Run(port, handler.InitRoutes()); err != nil {
+		log.Fatalf("Ошибка при запуске сервера: %v", err)
+	}
 }
