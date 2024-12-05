@@ -13,6 +13,6 @@ func NewService(repo *repositories.Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) GetSongList() ([]models.Song, error) {
-	return s.repo.FetchSongs()
+func (s *Service) GetSongList(filter models.SongFilter) ([]models.Song, error) {
+	return s.repo.FetchSongs(filter)
 }
