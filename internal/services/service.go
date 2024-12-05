@@ -6,13 +6,13 @@ import (
 )
 
 type Service struct {
-	repo *repositories.SongRepository
+	repo *repositories.Repository
 }
 
-func NewService(repo *repositories.SongRepository) *Service {
+func NewService(repo *repositories.Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) FetchSongs() ([]models.Song, error) {
-	return s.repo.GetSongs()
+func (s *Service) GetSongList() ([]models.Song, error) {
+	return s.repo.FetchSongs()
 }

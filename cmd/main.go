@@ -2,30 +2,36 @@ package main
 
 import (
 	"log"
-	"os"
 
+	"github.com/codeboris/music-lib/config"
 	"github.com/codeboris/music-lib/internal/handlers"
 	"github.com/codeboris/music-lib/internal/repositories"
 	"github.com/codeboris/music-lib/internal/services"
 	"github.com/codeboris/music-lib/pkg/db"
 	"github.com/codeboris/music-lib/pkg/server"
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	databaseURL := os.Getenv("DATABASE_URL")
-	port := os.Getenv("APP_PORT")
-	dbConn, err := db.Connect(databaseURL)
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+	cfg := config.LoadConfig()
+
+	dbApi, err := db.NewPostgresDB(cfg)
 	if err != nil {
-		log.Fatalf("Ошибка подключения к БД: %v", err)
+		logrus.Fatalf("Ошибка подключения к БД: %v", err)
 	}
 
-	repo := repositories.NewSongRepository(dbConn)
+	if err := db.RunMigrations(dbApi.DB, cfg.ConfigMigrate); err != nil {
+		log.Fatalf("Ошибка выполнения миграций: %v", err)
+	}
+
+	repo := repositories.NewRepository(dbApi)
 	service := services.NewService(repo)
 	handler := handlers.NewHandler(service)
 
 	srv := new(server.Server)
-	if err := srv.Run(port, handler.InitRoutes()); err != nil {
+	if err := srv.Run(cfg.Port, handler.InitRoutes()); err != nil {
 		log.Fatalf("Ошибка при запуске сервера: %v", err)
 	}
 }

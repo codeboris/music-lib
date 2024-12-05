@@ -1,20 +1,17 @@
 FROM golang:1.23-alpine AS builder
 
-WORKDIR /app
+COPY . /github.com/codeboris/music-lib/
+WORKDIR /github.com/codeboris/music-lib/
 
-COPY go.mod go.sum ./
-
-RUN go mod tidy
-
-COPY . .
-
-RUN go build -o main ./cmd/main.go
+RUN go mod download
+RUN go build -o ./bin/main cmd/main.go
 
 FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=builder /app/main .
+COPY --from=builder /github.com/codeboris/music-lib/bin/main .
+COPY --from=builder /github.com/codeboris/music-lib/migrations migrations/
 
 EXPOSE 8000
 

@@ -8,7 +8,7 @@ import (
 )
 
 func (h *Handler) GetSongList(c *gin.Context) {
-	list, err := h.service.FetchSongs()
+	list, err := h.service.GetSongList()
 	if err != nil {
 		log.Fatalf("Ошибка получения списка песен: %v", err)
 	}
