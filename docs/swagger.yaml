@@ -1,9 +1,21 @@
-basePath: /
+basePath: /api
 definitions:
+  handlers.createSongResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   handlers.errorResponse:
     properties:
       message:
         type: string
+    type: object
+  handlers.getListVerses:
+    properties:
+      data:
+        items:
+          type: string
+        type: array
     type: object
   handlers.getListsResponse:
     properties:
@@ -11,6 +23,11 @@ definitions:
         items:
           $ref: '#/definitions/models.Song'
         type: array
+    type: object
+  handlers.statusResponse:
+    properties:
+      status:
+        type: string
     type: object
   models.InputSong:
     properties:
@@ -21,6 +38,19 @@ definitions:
     required:
     - group
     - song
+    type: object
+  models.InputUpdateSong:
+    properties:
+      group:
+        type: string
+      link:
+        type: string
+      release_date:
+        type: string
+      song:
+        type: string
+      text:
+        type: string
     type: object
   models.Song:
     properties:
@@ -44,47 +74,63 @@ info:
   title: Music Lib App API
   version: "1.0"
 paths:
-  /api/songs:
+  /songs:
     get:
       consumes:
       - application/json
-      description: get all list
-      operationId: get-all-list
+      description: Возвращает список песен с возможностью фильтрации по всем полям.
+      parameters:
+      - description: Группа или исполнитель песни
+        in: query
+        name: group
+        type: string
+      - description: Название песни
+        in: query
+        name: song
+        type: string
+      - description: Дата выхода песни (в формате DD-MM-YYYY)
+        in: query
+        name: release_date
+        type: string
+      - description: Фрагмент текста песни
+        in: query
+        name: text
+        type: string
+      - description: Ссылка на песню
+        in: query
+        name: link
+        type: string
+      - description: Номер страницы (по умолчанию 1)
+        in: query
+        name: page
+        type: integer
+      - description: Количество записей на странице (по умолчанию 10)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список песен
           schema:
             $ref: '#/definitions/handlers.getListsResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handlers.errorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handlers.errorResponse'
         "500":
-          description: Internal Server Error
+          description: Ошибка сервера
           schema:
             $ref: '#/definitions/handlers.errorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/handlers.errorResponse'
-      summary: Get All List
+      summary: Получить список песен
       tags:
-      - list
+      - Песни
     post:
       consumes:
       - application/json
-      description: create song list
-      operationId: create-list
+      description: Создает новую песню, заполняя необходимые поля из внешнего API
+        по группе и названию песни.
       parameters:
-      - description: list info
+      - description: Данные для создания песни
         in: body
-        name: input
+        name: inputSong
         required: true
         schema:
           $ref: '#/definitions/models.InputSong'
@@ -92,26 +138,120 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: ID созданной песни
           schema:
-            type: integer
+            $ref: '#/definitions/handlers.createSongResponse'
         "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handlers.errorResponse'
-        "404":
-          description: Not Found
+          description: Неверный запрос
           schema:
             $ref: '#/definitions/handlers.errorResponse'
         "500":
-          description: Internal Server Error
+          description: Ошибка сервера
           schema:
             $ref: '#/definitions/handlers.errorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/handlers.errorResponse'
-      summary: Create song
+      summary: Создать новую песню
       tags:
-      - list
+      - Песни
+  /songs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет песню по заданному ID. Требуется передать ID песни в URL.
+      parameters:
+      - description: ID песни для удаления
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус удаления
+          schema:
+            $ref: '#/definitions/handlers.statusResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Удалить песню по ID
+      tags:
+      - Песни
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные о песне по ID. Требуется передать данные для обновления
+        в формате JSON.
+      parameters:
+      - description: ID песни для обновления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для обновления песни
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.InputUpdateSong'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус обновления
+          schema:
+            $ref: '#/definitions/handlers.statusResponse'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Обновить информацию о песне
+      tags:
+      - Песни
+  /songs/{id}/lyrics:
+    get:
+      consumes:
+      - application/json
+      description: Данный метод извлекает текст песни по ID, делит его на куплеты
+        и возвращает их постранично.
+      parameters:
+      - description: ID песни
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Номер страницы для пагинации (по умолчанию 1)
+        in: query
+        name: page
+        type: integer
+      - description: Количество куплетов на странице (по умолчанию 2)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список куплетов
+          schema:
+            $ref: '#/definitions/handlers.getListVerses'
+        "400":
+          description: Неверные параметры запроса
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Получить текст песни с разбивкой на куплеты
+      tags:
+      - Песни
 swagger: "2.0"

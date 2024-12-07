@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/songs": {
+        "/songs": {
             "get": {
-                "description": "get all list",
+                "description": "Возвращает список песен с возможностью фильтрации по всем полям.",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,37 +25,62 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "Песни"
                 ],
-                "summary": "Get All List",
-                "operationId": "get-all-list",
+                "summary": "Получить список песен",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Группа или исполнитель песни",
+                        "name": "group",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название песни",
+                        "name": "song",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата выхода песни (в формате DD-MM-YYYY)",
+                        "name": "release_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Фрагмент текста песни",
+                        "name": "text",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ссылка на песню",
+                        "name": "link",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Номер страницы (по умолчанию 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество записей на странице (по умолчанию 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Список песен",
                         "schema": {
                             "$ref": "#/definitions/handlers.getListsResponse"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    },
                     "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    },
-                    "default": {
-                        "description": "",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/handlers.errorResponse"
                         }
@@ -63,7 +88,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "create song list",
+                "description": "Создает новую песню, заполняя необходимые поля из внешнего API по группе и названию песни.",
                 "consumes": [
                     "application/json"
                 ],
@@ -71,14 +96,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "list"
+                    "Песни"
                 ],
-                "summary": "Create song",
-                "operationId": "create-list",
+                "summary": "Создать новую песню",
                 "parameters": [
                     {
-                        "description": "list info",
-                        "name": "input",
+                        "description": "Данные для создания песни",
+                        "name": "inputSong",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -88,31 +112,170 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "ID созданной песни",
                         "schema": {
-                            "type": "integer"
+                            "$ref": "#/definitions/handlers.createSongResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.errorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
+                        "description": "Неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/handlers.errorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/songs/{id}": {
+            "put": {
+                "description": "Обновляет данные о песне по ID. Требуется передать данные для обновления в формате JSON.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Песни"
+                ],
+                "summary": "Обновить информацию о песне",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID песни для обновления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления песни",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.InputUpdateSong"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус обновления",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.statusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/handlers.errorResponse"
                         }
                     },
-                    "default": {
-                        "description": "",
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет песню по заданному ID. Требуется передать ID песни в URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Песни"
+                ],
+                "summary": "Удалить песню по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID песни для удаления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус удаления",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.statusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/songs/{id}/lyrics": {
+            "get": {
+                "description": "Данный метод извлекает текст песни по ID, делит его на куплеты и возвращает их постранично.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Песни"
+                ],
+                "summary": "Получить текст песни с разбивкой на куплеты",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID песни",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Номер страницы для пагинации (по умолчанию 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество куплетов на странице (по умолчанию 2)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список куплетов",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.getListVerses"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры запроса",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/handlers.errorResponse"
                         }
@@ -122,11 +285,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.createSongResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.errorResponse": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.getListVerses": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -141,6 +323,14 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.statusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "models.InputSong": {
             "type": "object",
             "required": [
@@ -152,6 +342,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "song": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InputUpdateSong": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string"
+                },
+                "song": {
+                    "type": "string"
+                },
+                "text": {
                     "type": "string"
                 }
             }
@@ -186,7 +396,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8000",
-	BasePath:         "/",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Music Lib App API",
 	Description:      "API Server for Music Lib Application",

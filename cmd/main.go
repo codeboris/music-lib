@@ -18,7 +18,7 @@ import (
 // @description API Server for Music Lib Application
 
 // @host localhost:8000
-// @BasePath /
+// @BasePath /api
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	cfg := config.LoadConfig()

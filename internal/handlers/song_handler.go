@@ -17,6 +17,10 @@ type getListVerses struct {
 	Data []string `json:"data"`
 }
 
+type createSongResponse struct {
+	ID int `json:"id"`
+}
+
 func getIntParam(c *gin.Context, key string, defaultValue int) int {
 	value := c.DefaultQuery(key, fmt.Sprintf("%d", defaultValue))
 	intValue, err := strconv.Atoi(value)
@@ -26,17 +30,21 @@ func getIntParam(c *gin.Context, key string, defaultValue int) int {
 	return intValue
 }
 
-// @Summary Get All List
-// @Tags list
-// @Description get all list
-// @ID get-all-list
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} getListsResponse
-// @Failure 400,404 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Failure default {object} errorResponse
-// @Router /api/songs [get]
+// @Summary Получить список песен
+// @Description Возвращает список песен с возможностью фильтрации по всем полям.
+// @Tags Песни
+// @Accept json
+// @Produce json
+// @Param group query string false "Группа или исполнитель песни"
+// @Param song query string false "Название песни"
+// @Param release_date query string false "Дата выхода песни (в формате DD-MM-YYYY)"
+// @Param text query string false "Фрагмент текста песни"
+// @Param link query string false "Ссылка на песню"
+// @Param page query int false "Номер страницы (по умолчанию 1)"
+// @Param limit query int false "Количество записей на странице (по умолчанию 10)"
+// @Success 200 {object} getListsResponse "Список песен"
+// @Failure 500 {object} errorResponse "Ошибка сервера"
+// @Router /songs [get]
 func (h *Handler) GetSongList(c *gin.Context) {
 	filter := models.SongFilter{
 		Group:       c.DefaultQuery("group", ""),
@@ -59,18 +67,16 @@ func (h *Handler) GetSongList(c *gin.Context) {
 	})
 }
 
-// @Summary Create song
-// @Tags list
-// @Description create song list
-// @ID create-list
-// @Accept  json
-// @Produce  json
-// @Param input body models.InputSong true "list info"
-// @Success 200 {integer} integer 1
-// @Failure 400,404 {object} errorResponse
-// @Failure 500 {object} errorResponse
-// @Failure default {object} errorResponse
-// @Router /api/songs [post]
+// @Summary Создать новую песню
+// @Description Создает новую песню, заполняя необходимые поля из внешнего API по группе и названию песни.
+// @Tags Песни
+// @Accept json
+// @Produce json
+// @Param inputSong body models.InputSong true "Данные для создания песни"
+// @Success 200 {object} createSongResponse "ID созданной песни"
+// @Failure 400 {object} errorResponse "Неверный запрос"
+// @Failure 500 {object} errorResponse "Ошибка сервера"
+// @Router /songs [post]
 func (h *Handler) CreateSong(c *gin.Context) {
 	var inputSong models.InputSong
 
@@ -92,11 +98,22 @@ func (h *Handler) CreateSong(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": songId,
+	c.JSON(http.StatusOK, createSongResponse{
+		ID: songId,
 	})
 }
 
+// @Summary Обновить информацию о песне
+// @Description Обновляет данные о песне по ID. Требуется передать данные для обновления в формате JSON.
+// @Tags Песни
+// @Accept json
+// @Produce json
+// @Param id path int true "ID песни для обновления"
+// @Param input body models.InputUpdateSong true "Данные для обновления песни"
+// @Success 200 {object} statusResponse "Статус обновления"
+// @Failure 400 {object} errorResponse "Неверный запрос"
+// @Failure 500 {object} errorResponse "Ошибка сервера"
+// @Router /songs/{id} [put]
 func (h *Handler) UpdateSong(c *gin.Context) {
 	songID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -119,6 +136,16 @@ func (h *Handler) UpdateSong(c *gin.Context) {
 
 }
 
+// @Summary Удалить песню по ID
+// @Description Удаляет песню по заданному ID. Требуется передать ID песни в URL.
+// @Tags Песни
+// @Accept json
+// @Produce json
+// @Param id path int true "ID песни для удаления"
+// @Success 200 {object} statusResponse "Статус удаления"
+// @Failure 400 {object} errorResponse "Неверный запрос"
+// @Failure 500 {object} errorResponse "Ошибка сервера"
+// @Router /songs/{id} [delete]
 func (h *Handler) DeleteSong(c *gin.Context) {
 	songID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -132,6 +159,18 @@ func (h *Handler) DeleteSong(c *gin.Context) {
 	c.JSON(http.StatusOK, statusResponse{Status: "ok"})
 }
 
+// @Summary Получить текст песни с разбивкой на куплеты
+// @Description Данный метод извлекает текст песни по ID, делит его на куплеты и возвращает их постранично.
+// @Tags Песни
+// @Accept json
+// @Produce json
+// @Param id path int true "ID песни"
+// @Param page query int false "Номер страницы для пагинации (по умолчанию 1)"
+// @Param limit query int false "Количество куплетов на странице (по умолчанию 2)"
+// @Success 200 {object} getListVerses "Список куплетов"
+// @Failure 400 {object} errorResponse "Неверные параметры запроса"
+// @Failure 500 {object} errorResponse "Ошибка сервера"
+// @Router /songs/{id}/lyrics [get]
 func (h *Handler) GetLyrics(c *gin.Context) {
 	songID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
