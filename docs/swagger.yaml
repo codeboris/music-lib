@@ -67,7 +67,7 @@ definitions:
       text:
         type: string
     type: object
-host: localhost:8000
+host: localhost:{APP_PORT}
 info:
   contact: {}
   description: API Server for Music Lib Application
