@@ -13,6 +13,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// @title Music Lib App API
+// @version 1.0
+// @description API Server for Music Lib Application
+
+// @host localhost:8000
+// @BasePath /
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	cfg := config.LoadConfig()

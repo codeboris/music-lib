@@ -6,7 +6,7 @@ down:
 
 logs:
 	docker logs music-lib-app
-	
+
 db:
 	docker compose exec postgres psql -U postgres
 

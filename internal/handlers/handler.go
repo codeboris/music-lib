@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	_ "github.com/codeboris/music-lib/docs"
 	"github.com/codeboris/music-lib/internal/services"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Handler struct {
@@ -16,6 +19,8 @@ func NewHandler(service *services.Service) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
+	router.GET("swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	api := router.Group("/api")
 	{
 		lists := api.Group("/songs")
@@ -25,10 +30,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			lists.PUT("/:id", h.UpdateSong)
 			lists.DELETE("/:id", h.DeleteSong)
 
-			// items := lists.Group(":id/lyrics")
-			// {
-			// 	items.GET("/", h.getLyrics)
-			// }
+			items := lists.Group(":id/lyrics")
+			{
+				items.GET("/", h.GetLyrics)
+			}
 		}
 	}
 

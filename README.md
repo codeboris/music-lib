@@ -8,7 +8,7 @@
 ```bash
 make init
 ```
-Open in browse: localhost:8000/api
+Open in browse: http://localhost:8000/swagger/index.html
 ## Stop project
 ```bash
 make down
